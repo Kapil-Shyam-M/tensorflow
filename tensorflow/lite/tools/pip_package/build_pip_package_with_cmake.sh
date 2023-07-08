@@ -106,6 +106,20 @@ case "${TENSORFLOW_TARGET}" in
       -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
       "${TENSORFLOW_LITE_DIR}"
     ;;
+  riscv64)
+    RISCVCC_PREFIX=riscv64-linux-gnu-
+    RISCVCC_FLAGS="-g -march=rv64imafdc -mabi=lp64d -mcmodel=medany"
+    RISCVCC_FLAGS="${RISCVCC_FLAGS} -I${PYTHON_INCLUDE} -I${PYBIND11_INCLUDE} -I${NUMPY_INCLUDE}"
+    cmake \
+      -DCMAKE_C_COMPILER=${RISCVCC_PREFIX}gcc \
+      -DCMAKE_CXX_COMPILER=${RISCVCC_PREFIX}g++ \
+      -DCMAKE_C_FLAGS="${RISCVCC_FLAGS}" \
+      -DCMAKE_CXX_FLAGS="${RISCVCC_FLAGS}" \
+      -DCMAKE_SYSTEM_NAME=Linux \
+      -DCMAKE_SYSTEM_PROCESSOR=riscv64 \
+      -DTFLITE_ENABLE_XNNPACK=OFF \
+      "${TENSORFLOW_LITE_DIR}"
+    ;;
   native)
     BUILD_FLAGS=${BUILD_FLAGS:-"-march=native -I${PYTHON_INCLUDE} -I${PYBIND11_INCLUDE} -I${NUMPY_INCLUDE}"}
     cmake \
@@ -159,6 +173,11 @@ case "${TENSORFLOW_TARGET}" in
     ${PYTHON} setup.py bdist --plat-name=${WHEEL_PLATFORM_NAME} \
                        bdist_wheel --plat-name=${WHEEL_PLATFORM_NAME}
     ;;
+  riscv64)
+    WHEEL_PLATFORM_NAME="${WHEEL_PLATFORM_NAME:-linux-riscv64}"
+    ${PYTHON} setup.py bdist --plat-name=${WHEEL_PLATFORM_NAME} \
+                       bdist_wheel --plat-name=${WHEEL_PLATFORM_NAME}
+    ;;
   *)
     if [[ -n "${WHEEL_PLATFORM_NAME}" ]]; then
       ${PYTHON} setup.py bdist --plat-name=${WHEEL_PLATFORM_NAME} \
@@ -205,6 +224,9 @@ case "${TENSORFLOW_TARGET}" in
     ;;
   aarch64)
     dpkg-buildpackage -b -rfakeroot -us -uc -tc -d -a arm64
+    ;;
+  riscv64)
+    dpkg-buildpackage -b -rfakeroot -us -uc -tc -d -a riscv64
     ;;
   *)
     dpkg-buildpackage -b -rfakeroot -us -uc -tc -d
